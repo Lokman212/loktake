@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LokTake</title>
+  <meta name="theme-color" content="#172522" />
+  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="stylesheet" href="/styles.css" />
+  <script type="module" src="/vendor/player/hyperframes-player.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="LokTake — accueil">
+      <svg class="brand-mark" viewBox="-12 -12 120 120" aria-hidden="true"><path fill="currentColor" d="M0 0H32V12H12V84H32V96H0Z M96 0H64V12H84V84H64V96H96Z"/><path fill="var(--pervenche)" d="M48 27L69 48L48 69L27 48Z"/></svg>
+      <span class="brand-name">LokTake</span>
+    </a>
+    <nav class="crumbs" aria-label="Projet et version">
+      <select id="projectSelect" class="crumb-select" aria-label="Projet"></select>
+      <span class="crumb-sep" aria-hidden="true">/</span>
+      <span class="version-pill"><select id="versionSelect" class="crumb-select" aria-label="Version du rendu"></select></span>
+    </nav>
+    <span class="local" title="Tout reste sur cette machine : aucune vidéo n'est envoyée en ligne."><i aria-hidden="true"></i>En local</span>
+    <button id="refreshBtn" class="btn ghost-dark" title="Relire les projets et les rendus">Actualiser</button>
+  </header>
+
+  <main class="layout">
+    <section class="viewer" aria-label="Lecteur">
+      <div class="stage" id="stage">
+        <div class="screen-card">
+          <div class="stage-top">
+            <span id="versionBadge" class="vbadge"></span>
+            <span class="spacer"></span>
+            <button id="loopBtn" class="stage-btn" title="Lire la sélection en boucle (L)" aria-pressed="false">Boucle</button>
+            <button id="fullscreenBtn" class="stage-btn" title="Plein écran (F)">Plein écran</button>
+          </div>
+          <div class="screen" id="screen">
+            <div class="screen-empty" id="screenEmpty">Choisissez un projet et une version.</div>
+          </div>
+          <div class="scrub" id="scrub" aria-hidden="true"><div class="scrub-sel" id="scrubSel"></div><div class="scrub-fill" id="scrubFill"></div><div class="scrub-knob" id="scrubKnob"></div></div>
+        </div>
+        <div class="transport">
+          <button class="tbtn play" id="playBtn" title="Lecture / pause (Espace)" aria-label="Lecture / pause"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path id="playIcon" d="M7 4l13 8-13 8z" fill="currentColor"/></svg></button>
+          <div class="steps">
+            <button class="tbtn" data-step="-1s" title="Reculer d'1 s (Maj+←)">−1 s</button>
+            <button class="tbtn" data-step="-1f" title="Image précédente (←)">−1 img</button>
+            <button class="tbtn" data-step="+1f" title="Image suivante (→)">+1 img</button>
+            <button class="tbtn" data-step="+1s" title="Avancer d'1 s (Maj+→)">+1 s</button>
+          </div>
+          <div class="timecode" id="timecode" aria-live="off">00:00.00 · f000</div>
+          <div class="speeds" id="speeds" role="group" aria-label="Vitesse de lecture">
+            <button data-rate="0.5">0,5×</button><button data-rate="1" class="on">1×</button><button data-rate="1.25">1,25×</button><button data-rate="1.5">1,5×</button><button data-rate="2">2×</button>
+          </div>
+        </div>
+        <div class="hint" id="hint"></div>
+      </div>
+
+      <div id="banners"></div>
+
+      <div class="panel timeline-card">
+        <div class="tl-toolbar">
+          <span class="label">Timeline</span>
+          <span class="tl-sel" id="selInfo"></span>
+          <span class="spacer"></span>
+          <span class="tl-warn" id="tlWarn"></span>
+          <div class="zoom" role="group" aria-label="Zoom de la timeline">
+            <button class="mini" id="zoomOut" title="Dézoomer" aria-label="Dézoomer">−</button>
+            <input type="range" id="zoom" min="0" max="100" value="0" aria-label="Zoom de la timeline" />
+            <button class="mini" id="zoomIn" title="Zoomer" aria-label="Zoomer">+</button>
+            <button class="mini" id="zoomFit" title="Ajuster à la largeur">Ajuster</button>
+          </div>
+        </div>
+        <div class="tl" id="timeline"></div>
+      </div>
+    </section>
+
+    <aside class="side panel" aria-label="Retours et montage">
+      <nav class="tabs" role="tablist">
+        <button role="tab" data-tab="retours" class="on" aria-selected="true">Retours <span id="annCount" class="count"></span></button>
+        <button role="tab" data-tab="montage" aria-selected="false">Montage MP4 <span id="cutCount" class="count"></span></button>
+      </nav>
+
+      <div class="tab-panel" id="panel-retours" role="tabpanel">
+        <div class="composer">
+          <div class="composer-target">
+            <span id="targetLabel" class="target-label"></span>
+            <span class="spacer"></span>
+            <button class="link" id="clearSel" title="Échap">Instant au curseur</button>
+          </div>
+          <div class="chips" id="targetChips"></div>
+          <label class="sr-only" for="commentInput">Votre retour</label>
+          <textarea id="commentInput" rows="2" placeholder="Quel ajustement sur ce passage ?"></textarea>
+          <div class="composer-foot">
+            <span class="composer-help" title="Maj+Entrée pour aller à la ligne">Entrée ↵ pour ajouter</span>
+            <button class="btn ink" id="addBtn">+ Ajouter un retour</button>
+          </div>
+        </div>
+        <div class="filters">
+          <div class="seg" id="statusFilter" role="group" aria-label="Filtrer par statut">
+            <button data-f="open" class="on">Ouverts</button><button data-f="a_traiter">À traiter</button><button data-f="a_verifier">À vérifier</button><button data-f="valide">Validés</button><button data-f="all">Tous</button>
+          </div>
+          <label class="check"><input type="checkbox" id="allVersions" /> Toutes versions</label>
+        </div>
+        <ul class="ann-list" id="annList"></ul>
+      </div>
+
+      <div class="tab-panel hidden" id="panel-montage" role="tabpanel"></div>
+      <div class="export-bar">
+        <button class="btn primary big" id="copyClaude">Copier pour Claude</button>
+        <div class="export-note">
+          <span>À coller dans Claude Code.<small>Le code source reste inchangé dans l'atelier.</small></span>
+          <button class="link" id="exportJson" title="Toutes les annotations, toutes versions">Exporter en JSON</button>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <div id="toasts" aria-live="polite"></div>
+  <dialog id="dialog"></dialog>
+</body>
+</html>
